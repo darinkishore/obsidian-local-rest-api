@@ -6,6 +6,8 @@ import {
   PluginManifest,
   prepareSimpleSearch,
   TFile,
+  WorkspaceLeaf,
+  MarkdownView,
 } from "obsidian";
 import periodicNotes from "obsidian-daily-notes-interface";
 import { getAPI as getDataviewAPI } from "obsidian-dataview";
@@ -1126,6 +1128,24 @@ export default class RequestHandler {
     res.json();
   }
 
+  async openFilesGet(
+    req: express.Request,
+    res: express.Response
+  ): Promise<void> {
+    const open: string[] = [];
+
+    this.app.workspace.iterateAllLeaves((leaf: WorkspaceLeaf) => {
+      const tfile = (leaf.view as MarkdownView | { file?: TFile }).file;
+      if (tfile) {
+        open.push(tfile.path);
+      }
+    });
+
+    const active = this.app.workspace.getActiveFile()?.path ?? null;
+
+    res.json({ open, active });
+  }
+
   async certificateGet(
     req: express.Request,
     res: express.Response
@@ -1255,6 +1275,7 @@ export default class RequestHandler {
     this.api.route("/search/simple/").post(this.searchSimplePost.bind(this));
 
     this.api.route("/open/*").post(this.openPost.bind(this));
+    this.api.get("/workspace/open-files", this.openFilesGet.bind(this));
 
     this.api.get(`/${CERT_NAME}`, this.certificateGet.bind(this));
     this.api.get("/", this.root.bind(this));
