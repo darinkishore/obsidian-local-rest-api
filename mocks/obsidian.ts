@@ -116,6 +116,20 @@ export class MetadataCache {
   }
 }
 
+export class WorkspaceLeaf {
+  view: any;
+  constructor(view: any = null) {
+    this.view = view;
+  }
+}
+
+export class MarkdownView {
+  file: TFile | null;
+  constructor(file: TFile | null = null) {
+    this.file = file;
+  }
+}
+
 export class Workspace {
   async openLinkText(
     path: string,
@@ -125,8 +139,17 @@ export class Workspace {
     return new Promise((resolve, reject) => resolve());
   }
 
-  getActiveFile(): TFile {
-    return new TFile();
+  leaves: WorkspaceLeaf[] = [];
+  _activeFile: TFile | null = null;
+
+  getActiveFile(): TFile | null {
+    return this._activeFile;
+  }
+
+  iterateAllLeaves(callback: (leaf: WorkspaceLeaf) => any): void {
+    for (const leaf of this.leaves) {
+      callback(leaf);
+    }
   }
 }
 

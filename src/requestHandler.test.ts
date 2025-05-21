@@ -10,6 +10,7 @@ import {
   Command,
   HeadingCache,
   PluginManifest,
+  WorkspaceLeaf,
 } from "../mocks/obsidian";
 
 describe("requestHandler", () => {
@@ -800,6 +801,32 @@ describe("requestHandler", () => {
       await request(server)
         .post(`/commands/${arbitraryCommand.id}`)
         .expect(401);
+    });
+  });
+
+  describe("openFilesGet", () => {
+    test("unauthorized", async () => {
+      await request(server).get("/workspace/open-files").expect(401);
+    });
+
+    test("returns list of open and active files", async () => {
+      const file1 = new TFile();
+      file1.path = "one.md";
+      const file2 = new TFile();
+      file2.path = "two.md";
+
+      const leaf1 = new WorkspaceLeaf({ file: file1 });
+      const leaf2 = new WorkspaceLeaf({ file: file2 });
+      app.workspace.leaves = [leaf1, leaf2];
+      app.workspace._activeFile = file1;
+
+      const result = await request(server)
+        .get("/workspace/open-files")
+        .set("Authorization", `Bearer ${API_KEY}`)
+        .expect(200);
+
+      expect(result.body.open.sort()).toEqual([file1.path, file2.path].sort());
+      expect(result.body.active).toEqual(file1.path);
     });
   });
 });
