@@ -1132,18 +1132,18 @@ export default class RequestHandler {
     req: express.Request,
     res: express.Response
   ): Promise<void> {
-    const open: string[] = [];
+    const open = new Set<string>();
 
     this.app.workspace.iterateAllLeaves((leaf: WorkspaceLeaf) => {
-      const tfile = (leaf.view as MarkdownView | { file?: TFile }).file;
-      if (tfile) {
-        open.push(tfile.path);
+      const { type, state } = leaf.getViewState();
+      if (type === "markdown" && typeof (state as any)?.file === "string") {
+        open.add((state as any).file);
       }
     });
 
     const active = this.app.workspace.getActiveFile()?.path ?? null;
 
-    res.json({ open, active });
+    res.json({ open: Array.from(open), active });
   }
 
   async certificateGet(
