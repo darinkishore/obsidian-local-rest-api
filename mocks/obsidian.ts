@@ -118,8 +118,18 @@ export class MetadataCache {
 
 export class WorkspaceLeaf {
   view: any;
-  constructor(view: any = null) {
+  _viewState: { type: string; state: Record<string, unknown> } | null;
+  constructor(view: any = null, viewState: { type: string; state: Record<string, unknown> } | null = null) {
     this.view = view;
+    this._viewState = viewState;
+  }
+
+  getViewState(): { type: string; state: Record<string, unknown> } {
+    if (this._viewState) {
+      return this._viewState;
+    }
+    const file = (this.view as any)?.file;
+    return { type: "markdown", state: file ? { file: file.path ?? file } : {} };
   }
 }
 
